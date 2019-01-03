@@ -11,7 +11,7 @@ from golem.environments.environment import SupportStatus, UnsupportReason
 
 class BlenderEnvironment(DockerEnvironment):
     DOCKER_IMAGE = "golemfactory/blender"
-    DOCKER_TAG = "1.5"
+    DOCKER_TAG = "1.6"
     ENV_ID = "BLENDER"
     APP_DIR = path.join(get_golem_path(), 'apps', 'blender')
     SCRIPT_NAME = "docker_blendertask.py"
@@ -21,7 +21,7 @@ class BlenderEnvironment(DockerEnvironment):
 class BlenderNVGPUEnvironment(BlenderEnvironment):
 
     DOCKER_IMAGE = "golemfactory/blender_nvgpu"
-    DOCKER_TAG = "1.1"
+    DOCKER_TAG = "1.2"
     ENV_ID = "BLENDER_NVGPU"
     SHORT_DESCRIPTION = "Blender + NVIDIA GPU (www.blender.org)"
 

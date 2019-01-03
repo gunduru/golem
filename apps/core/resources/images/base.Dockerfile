@@ -25,7 +25,7 @@ RUN mkdir /golem \
  && mkdir /golem/resources \
  && mkdir /golem/output
 
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN sed -i -e 's/\r$//' /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

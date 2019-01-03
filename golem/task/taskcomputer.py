@@ -419,14 +419,6 @@ class TaskComputer(object):
             self.counting_thread.end_comp()
 
 
-class AssignedSubTask(object):
-    def __init__(self, src_code, extra_data, owner_address, owner_port):
-        self.src_code = src_code
-        self.extra_data = extra_data
-        self.owner_address = owner_address
-        self.owner_port = owner_port
-
-
 class PyTaskThread(TaskThread):
     # pylint: disable=too-many-arguments
     def __init__(self, subtask_id, src_code,

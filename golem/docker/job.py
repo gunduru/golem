@@ -8,6 +8,7 @@ from typing import Dict, Optional, Iterable
 import docker.errors
 
 from golem.core.common import nt_path_to_posix_path, is_osx, is_linux
+from golem.task.payload import Payload, Source
 from golem.docker.image import DockerImage
 from .client import local_client
 
@@ -61,7 +62,7 @@ class DockerJob(object):
     # pylint:disable=too-many-arguments
     def __init__(self,
                  image: DockerImage,
-                 script_src: str,
+                 payload: Payload,
                  parameters: Dict,
                  resources_dir: str,
                  work_dir: str,
@@ -72,8 +73,8 @@ class DockerJob(object):
                  container_log_level: Optional[int] = None) -> None:
         """
         :param DockerImage image: Docker image to use
-        :param str script_src: source of the task script file
-        :param dict parameters: parameters for the task script
+        :param str payload: payload to run inside the container
+        :param dict parameters: payload parameters
         :param str resources_dir: directory with task resources
         :param str work_dir: directory for temporary work files
         :param str output_dir: directory for output files
@@ -82,7 +83,7 @@ class DockerJob(object):
             raise TypeError('Incorrect image type: {}. '
                             'Should be: DockerImage'.format(type(image)))
         self.image = image
-        self.script_src = script_src
+        self.payload = payload
         self.parameters = parameters if parameters else {}
 
         self.parameters.update(self.PATH_PARAMS)
@@ -125,9 +126,12 @@ class DockerJob(object):
             json.dump(self.parameters, params_file)
 
         # Save the script in work_dir/TASK_SCRIPT
-        task_script_path = self._get_host_script_path()
-        with open(task_script_path, "wb") as script_file:
-            script_file.write(bytearray(self.script_src, "utf-8"))
+        payload = self.payload
+        if isinstance(payload, Source):
+            payload = payload.save(self._get_host_script_path(),
+                                   self._get_container_script_path())
+        elif not payload:
+            raise RuntimeError("DockerJob requires a payload to run")
 
         # Setup volumes for the container
         client = local_client()
@@ -139,12 +143,11 @@ class DockerJob(object):
         host_cfg = client.create_host_config(**self.host_config)
 
         # The location of the task script when mounted in the container
-        container_script_path = self._get_container_script_path()
         self.container = client.create_container(
             image=self.image.name,
             volumes=self.volumes,
             host_config=host_cfg,
-            command=[container_script_path],
+            command=[payload.command],
             working_dir=self.WORK_DIR,
             environment=self.environment,
         )

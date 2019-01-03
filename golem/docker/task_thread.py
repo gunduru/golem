@@ -10,6 +10,7 @@ from golem.core.common import is_windows, is_osx
 from golem.docker.image import DockerImage
 from golem.docker.job import DockerJob
 from golem.environments.environmentsmanager import EnvironmentsManager
+from golem.task.payload import PythonSource
 from golem.task.taskthread import TaskThread, JobException, TimeoutException
 from golem.vm.memorychecker import MemoryChecker
 
@@ -200,7 +201,7 @@ class DockerTaskThread(TaskThread):
 
         params = dict(
             image=self.image,
-            script_src=self.src_code,
+            payload=PythonSource(self.src_code),
             parameters=self.extra_data,
             resources_dir=str(self.dir_mapping.resources),
             work_dir=str(self.dir_mapping.work),

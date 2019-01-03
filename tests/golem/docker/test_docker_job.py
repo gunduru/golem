@@ -18,6 +18,7 @@ from golem.core.simpleenv import get_local_datadir
 from golem.docker.client import local_client
 from golem.docker.image import DockerImage
 from golem.docker.job import DockerJob, container_logger
+from golem.task.payload import PythonSource
 from golem.tools.ci import ci_skip
 from tests.golem.docker.test_docker_image import DockerTestCase
 
@@ -57,12 +58,13 @@ class TestDockerJob(DockerTestCase):
 
     def testDockerJobInit(self):
         with self.assertRaises(TypeError):
-            DockerJob(None, "scr", [], '/var/lib/resources/',
+            DockerJob(None, PythonSource("scr"), [], '/var/lib/resources/',
                       '/var/lib/work', '/var/lib/out')
-        job = DockerJob(self.image, self.TEST_SCRIPT, None, self.resources_dir,
+        payload = PythonSource(self.TEST_SCRIPT)
+        job = DockerJob(self.image, payload, None, self.resources_dir,
                         self.work_dir, self.output_dir)
         self.assertEqual(job.image, self.image)
-        self.assertEqual(job.script_src, self.TEST_SCRIPT)
+        self.assertEqual(job.payload.code, self.TEST_SCRIPT)
 
         parameters = {'OUTPUT_DIR': '/golem/output',
                       'RESOURCES_DIR': '/golem/resources',
@@ -96,7 +98,7 @@ class TestDockerJob(DockerTestCase):
     def _create_test_job(self, script=TEST_SCRIPT, params=None):
         self.test_job = DockerJob(
             image=self.image,
-            script_src=script,
+            payload=PythonSource(script),
             parameters=params,
             resources_dir=self.resources_dir,
             work_dir=self.work_dir,
@@ -128,7 +130,7 @@ class TestBaseDockerJob(TestDockerJob):
         return "golemfactory/base"
 
     def _get_test_tag(self):
-        return "1.3"
+        return "1.4"
 
     def test_create(self):
         job = self._create_test_job()
@@ -252,7 +254,10 @@ class TestBaseDockerJob(TestDockerJob):
             self.assertIn("Path", info)
             self.assertEqual(info["Path"], "/usr/local/bin/entrypoint.sh")
             self.assertIn("Args", info)
-            self.assertEqual(info["Args"], [job._get_container_script_path()])
+            self.assertEqual(info["Args"], [
+                f"{PythonSource.DEFAULT_BINARY} "
+                f"{job._get_container_script_path()}"
+            ])
 
     def test_logs_stdout(self):
         text = "Adventure Time!"
