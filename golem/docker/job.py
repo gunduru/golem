@@ -82,6 +82,9 @@ class DockerJob(object):
         if not isinstance(image, DockerImage):
             raise TypeError('Incorrect image type: {}. '
                             'Should be: DockerImage'.format(type(image)))
+        if not payload:
+            raise RuntimeError("DockerJob requires a payload to run")
+
         self.image = image
         self.payload = payload
         self.parameters = parameters if parameters else {}
@@ -130,8 +133,6 @@ class DockerJob(object):
         if isinstance(payload, Source):
             payload = payload.save(self._get_host_script_path(),
                                    self._get_container_script_path())
-        elif not payload:
-            raise RuntimeError("DockerJob requires a payload to run")
 
         # Setup volumes for the container
         client = local_client()
